@@ -112,7 +112,7 @@ body::after { right: -170px; bottom: -190px; background: rgba(217, 167, 46, 0.08
   display: grid;
   place-items: center;
   align-content: center;
-  min-height: 460px;
+  min-height: 340px;
   padding: 40px;
   border: 1px dashed #cbd9ce;
   border-radius: 18px;
@@ -123,15 +123,20 @@ body::after { right: -170px; bottom: -190px; background: rgba(217, 167, 46, 0.08
 .welcome-state > strong { font-size: 17px; }
 .welcome-state p { margin: 8px 0 18px; color: var(--muted); font-size: 12px; }
 
+.worlds-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(360px, .95fr);
+  align-items: stretch;
+  gap: 16px;
+}
 .world-section {
-  margin-top: 16px;
+  min-width: 0;
   padding: 18px;
   border: 1px solid var(--border);
   border-radius: 18px;
   background: var(--card);
   box-shadow: var(--shadow);
 }
-.world-section:first-of-type { margin-top: 0; }
 .world-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; }
 .world-title { display: flex; align-items: center; gap: 11px; }
 .world-title > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; color: var(--green); background: var(--green-soft); }
@@ -140,22 +145,24 @@ body::after { right: -170px; bottom: -190px; background: rgba(217, 167, 46, 0.08
 .world-count { padding: 7px 11px; border-radius: 999px; color: #7b5915; background: var(--gold-soft); font-size: 11px; white-space: nowrap; }
 .empty-world { padding: 42px 20px; border-radius: 12px; color: var(--muted); background: #fbfcf9; text-align: center; font-size: 12px; }
 .task-list { display: grid; gap: 9px; }
-.task-card { display: grid; grid-template-columns: auto minmax(160px, 1fr) minmax(210px, .9fr) minmax(160px, .68fr); align-items: center; gap: 13px; min-width: 0; padding: 13px 14px; border: 1px solid var(--border); border-radius: 13px; background: #fbfcf9; transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+#main-world .task-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.task-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: auto auto; align-items: center; gap: 7px 11px; min-width: 0; padding: 12px; border: 1px solid var(--border); border-radius: 13px; background: #fbfcf9; transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
 .task-card:hover { transform: translateY(-1px); border-color: #c7d8cc; box-shadow: 0 8px 18px rgba(42, 73, 61, .06); }
 .task-card.assisted { border-color: #bcdcca; background: linear-gradient(100deg, var(--green-soft), #fbfcf9 46%); }
 .task-card.completed { opacity: .66; }
-.task-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; color: var(--green); background: var(--green-soft); }
+.task-icon { display: grid; place-items: center; grid-row: 1 / 3; width: 42px; height: 42px; border-radius: 12px; color: var(--green); background: var(--green-soft); }
 .task-main, .task-level, .task-time { min-width: 0; }
 .task-main strong, .task-main small, .task-time strong, .task-time small { display: block; }
 .task-main strong { overflow: hidden; color: var(--text); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .task-main small { margin-top: 4px; overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.task-level > strong { font-size: 14px; }
+.task-level { grid-column: 2 / 4; }
+.task-level > strong { font-size: 13px; }
 .task-level > span { margin: 0 5px; color: var(--gold); font-size: 12px; }
 .task-level em { display: flex; align-items: center; gap: 4px; margin-top: 5px; overflow: hidden; color: var(--muted); font-size: 10px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
 .task-level em.applied { color: var(--green); font-weight: 700; }
 .task-level em.conflict, .task-level em.missing { color: var(--danger); }
-.task-time { text-align: right; }
-.task-time strong { font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.task-time { grid-column: 3; grid-row: 1; text-align: right; }
+.task-time strong { font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .task-time small { margin-top: 4px; color: var(--muted); font-size: 10px; white-space: nowrap; }
 
 .primary-button, .icon-button { min-height: 42px; border: 1px solid transparent; border-radius: 11px; font-weight: 800; }
@@ -205,10 +212,11 @@ textarea::placeholder { color: #9aa9a1; }
 .helper-assignment small { margin-top: 3px; color: var(--muted); font-size: 10px; }
 .helper-assignment > span { max-width: 55%; color: var(--green); font-size: 10px; font-weight: 700; text-align: right; }
 
-@media (max-width: 980px) {
+@media (max-width: 1080px) {
   .site-header { grid-template-columns: 1fr auto; }
   .main-nav { display: none; }
-  .task-card { grid-template-columns: auto minmax(120px, 1fr) minmax(180px, .8fr) minmax(150px, .7fr); }
+  .worlds-grid { grid-template-columns: 1fr; }
+  #main-world .task-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {
@@ -218,9 +226,7 @@ textarea::placeholder { color: #9aa9a1; }
   .brand small, .local-badge { display: none; }
   .main-content { width: min(100% - 24px, 1240px); padding-top: 16px; }
   .content-toolbar { align-items: flex-start; }
-  .task-card { grid-template-columns: auto minmax(0, 1fr) auto; }
-  .task-level { grid-column: 2 / 3; }
-  .task-time { grid-column: 3; grid-row: 1 / 3; }
+  #main-world .task-list { grid-template-columns: 1fr; }
   .site-footer { flex-direction: column; gap: 5px; padding: 15px 16px; text-align: center; }
 }
 
@@ -232,7 +238,7 @@ textarea::placeholder { color: #9aa9a1; }
   .world-section { padding: 14px; border-radius: 15px; }
   .world-header { align-items: flex-start; }
   .world-title p { max-width: 190px; line-height: 1.5; }
-  .task-card { grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+  .task-card { grid-template-columns: auto minmax(0, 1fr); gap: 7px 10px; }
   .task-level { grid-column: 2; }
   .task-time { grid-column: 1 / -1; grid-row: auto; padding-top: 9px; border-top: 1px solid var(--border); text-align: left; }
   .task-time strong, .task-time small { display: inline; }

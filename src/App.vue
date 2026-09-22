@@ -199,7 +199,7 @@ function taskIcon(task: UpgradeTask): Component {
         <button class="primary-button" type="button" @click="openImport"><FileText :size="18" weight="Outline" />导入报文</button>
       </section>
 
-      <template v-else>
+      <div v-else class="worlds-grid">
         <section
           v-for="world in worlds"
           :id="world.key === 'home' ? 'main-world' : 'builder-world'"
@@ -234,7 +234,7 @@ function taskIcon(task: UpgradeTask): Component {
             </article>
           </div>
         </section>
-      </template>
+      </div>
 
       <section id="notes" class="notes-section">
         <CircleInfo :size="20" weight="Outline" />
