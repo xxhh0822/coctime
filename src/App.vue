@@ -20,27 +20,24 @@ import {
   Trash,
 } from 'reicon-vue'
 import { formatDateTime, formatDuration, parseSnapshot } from './analyzer'
-import type { AnalysisResult, UpgradeTask, Village } from './types'
-
-type Filter = 'all' | Village
+import type { AnalysisResult, HelperKind, UpgradeTask } from './types'
 
 const jsonText = ref('')
 const analysis = ref<AnalysisResult | null>(null)
 const error = ref('')
-const filter = ref<Filter>('all')
+const importOpen = ref(false)
+const helpersOpen = ref(false)
 const nowMs = ref(Date.now())
 let timer: ReturnType<typeof setInterval> | undefined
 
-const filteredTasks = computed(() => {
-  if (!analysis.value) return []
-  if (filter.value === 'all') return analysis.value.tasks
-  return analysis.value.tasks.filter((task) => task.village === filter.value)
-})
-
-const homeCount = computed(() => analysis.value?.tasks.filter((task) => task.village === 'home').length ?? 0)
-const builderCount = computed(() => analysis.value?.tasks.filter((task) => task.village === 'builder').length ?? 0)
-const helperTaskCount = computed(() => analysis.value?.tasks.filter((task) => task.recurrent).length ?? 0)
-const nextTask = computed(() => analysis.value?.tasks.find((task) => task.adjustedFinishAtMs > nowMs.value) ?? null)
+const homeTasks = computed(() => analysis.value?.tasks.filter((task) => task.village === 'home') ?? [])
+const builderTasks = computed(() => analysis.value?.tasks.filter((task) => task.village === 'builder') ?? [])
+const helperTasks = computed(() => analysis.value?.tasks.filter((task) => task.recurrent) ?? [])
+const helperKinds: HelperKind[] = ['builder', 'lab']
+const worlds = computed(() => [
+  { key: 'home', title: '主世界', description: '建筑、英雄、兵种、法术、攻城机器与宠物', icon: House, tasks: homeTasks.value },
+  { key: 'builder', title: '夜世界', description: '建筑大师基地升级项目', icon: Castle, tasks: builderTasks.value },
+])
 
 onMounted(() => {
   timer = setInterval(() => {
@@ -52,11 +49,16 @@ onBeforeUnmount(() => {
   if (timer) clearInterval(timer)
 })
 
+function openImport() {
+  error.value = ''
+  importOpen.value = true
+}
+
 function runAnalysis() {
   try {
     analysis.value = parseSnapshot(jsonText.value)
     error.value = ''
-    filter.value = 'all'
+    importOpen.value = false
     nowMs.value = Date.now()
   } catch (reason) {
     analysis.value = null
@@ -96,7 +98,6 @@ function clearInput() {
   jsonText.value = ''
   analysis.value = null
   error.value = ''
-  filter.value = 'all'
 }
 
 function remainingSeconds(task: UpgradeTask) {
@@ -126,6 +127,14 @@ function helperMessage(task: UpgradeTask) {
   return '未设置持续助手'
 }
 
+function helperTitle(kind: HelperKind) {
+  return kind === 'builder' ? '建筑工人学徒' : '实验室助手'
+}
+
+function assignedTasks(kind: HelperKind) {
+  return helperTasks.value.filter((task) => task.helperKind === kind)
+}
+
 function taskIcon(task: UpgradeTask): Component {
   if (task.category.includes('traps')) return Bomb
   if (task.category.includes('units') || task.category === 'siege_machines') return Flask
@@ -146,7 +155,7 @@ function taskIcon(task: UpgradeTask): Component {
       </a>
       <nav class="main-nav" aria-label="页面导航">
         <a href="#top"><House :size="17" weight="Outline" />首页</a>
-        <a href="#analyzer"><List :size="17" weight="Outline" />升级追踪</a>
+        <a href="#main-world"><List :size="17" weight="Outline" />升级追踪</a>
         <a href="#notes"><CircleInfo :size="17" weight="Outline" />使用说明</a>
       </nav>
       <div class="header-actions">
@@ -158,82 +167,60 @@ function taskIcon(task: UpgradeTask): Component {
     </header>
 
     <main id="top" class="main-content">
-      <section class="hero-section">
-        <div>
-          <p class="eyebrow">CLASH OF CLANS · UPGRADE TRACKER</p>
-          <h1>升级进度，一眼看清</h1>
-          <p class="hero-copy">粘贴玩家 JSON，自动识别升级项目并计算助手加成后的完成时间。</p>
+      <section id="analyzer" class="content-toolbar" aria-label="报文和助手操作">
+        <div class="player-meta">
+          <template v-if="analysis">
+            <strong>{{ analysis.tag }}</strong>
+            <span>报文时间 {{ formatDateTime(analysis.snapshotAtMs) }}</span>
+          </template>
+          <template v-else>
+            <strong>升级进度</strong>
+            <span>导入游戏报文后查看正在升级的项目</span>
+          </template>
         </div>
-        <div v-if="analysis" class="snapshot-meta">
-          <strong>{{ analysis.tag }}</strong>
-          <span>报文时间 {{ formatDateTime(analysis.snapshotAtMs) }}</span>
+        <div class="toolbar-actions">
+          <button v-if="analysis" class="helper-button" type="button" @click="helpersOpen = true">
+            <Sparkles :size="18" weight="Outline" />升级助手 <b>{{ helperTasks.length }}</b>
+          </button>
+          <button class="import-button" type="button" @click="openImport">
+            <FileText :size="18" weight="Outline" />{{ analysis ? '重新导入' : '导入报文' }}
+          </button>
         </div>
       </section>
 
-      <section class="summary-grid" aria-label="升级摘要">
-        <article class="summary-card">
-          <span class="summary-icon gold"><Building :size="25" weight="Outline" /></span>
-          <span><small>正在升级</small><strong>{{ analysis?.tasks.length ?? '—' }}</strong><em v-if="analysis">{{ homeCount }} 主村 · {{ builderCount }} 夜世界</em></span>
-        </article>
-        <article class="summary-card">
-          <span class="summary-icon green"><Sparkles :size="25" weight="Outline" /></span>
-          <span><small>持续助手任务</small><strong>{{ analysis ? helperTaskCount : '—' }}</strong><em>{{ analysis ? '已按报文状态计算' : '等待解析报文' }}</em></span>
-        </article>
-        <article class="summary-card">
-          <span class="summary-icon gold"><Clock :size="25" weight="Outline" /></span>
-          <span><small>最近完成</small><strong class="summary-time">{{ nextTask ? formatDuration(remainingSeconds(nextTask)) : '—' }}</strong><em>{{ nextTask ? nextTask.name : '暂无升级任务' }}</em></span>
-        </article>
+      <div v-if="analysis?.warnings.length" class="warning-list">
+        <p v-for="warning in analysis.warnings" :key="warning">{{ warning }}</p>
+      </div>
+
+      <section v-if="!analysis" class="welcome-state">
+        <span><Code :size="30" weight="Outline" /></span>
+        <strong>还没有升级数据</strong>
+        <p>导入玩家 JSON，解析会在当前浏览器本地完成。</p>
+        <button class="primary-button" type="button" @click="openImport"><FileText :size="18" weight="Outline" />导入报文</button>
       </section>
 
-      <section id="analyzer" class="workspace-grid">
-        <article class="input-panel">
-          <div class="panel-title">
-            <span><FileText :size="20" weight="Outline" />粘贴游戏报文</span>
-            <small>JSON</small>
-          </div>
-          <textarea v-model="jsonText" spellcheck="false" aria-label="游戏 JSON 报文" placeholder="在这里粘贴完整的玩家 JSON 报文…" @keydown.ctrl.enter.prevent="runAnalysis" />
-          <p v-if="error" class="error-message" role="alert">{{ error }}</p>
-          <div class="input-actions">
-            <button class="primary-button" type="button" @click="runAnalysis"><Play :size="18" weight="Filled" />开始解析</button>
-            <button class="secondary-button" type="button" @click="loadExample">示例</button>
-            <button class="icon-button" type="button" aria-label="清空输入" title="清空输入" @click="clearInput"><Trash :size="19" weight="Outline" /></button>
-          </div>
-          <p class="privacy-note"><ShieldCheck :size="17" weight="Outline" />报文仅在当前浏览器中解析，不会上传或保存。</p>
-        </article>
-
-        <article class="results-panel" aria-live="polite">
-          <div class="results-toolbar">
-            <div class="panel-title compact"><span><List :size="20" weight="Outline" />升级项目 <b v-if="analysis">({{ analysis.tasks.length }})</b></span></div>
-            <div v-if="analysis" class="filter-tabs" aria-label="村庄筛选">
-              <button type="button" :class="{ active: filter === 'all' }" @click="filter = 'all'">全部 {{ analysis.tasks.length }}</button>
-              <button type="button" :class="{ active: filter === 'home' }" @click="filter = 'home'">主村 {{ homeCount }}</button>
-              <button type="button" :class="{ active: filter === 'builder' }" @click="filter = 'builder'">夜世界 {{ builderCount }}</button>
+      <template v-else>
+        <section
+          v-for="world in worlds"
+          :id="world.key === 'home' ? 'main-world' : 'builder-world'"
+          :key="world.key"
+          class="world-section"
+        >
+          <header class="world-header">
+            <div class="world-title">
+              <span><component :is="world.icon" :size="22" weight="Outline" /></span>
+              <div><h2>{{ world.title }}</h2><p>{{ world.description }}</p></div>
             </div>
-          </div>
+            <strong class="world-count">{{ world.tasks.length }} 项升级</strong>
+          </header>
 
-          <div v-if="analysis?.warnings.length" class="warning-list">
-            <p v-for="warning in analysis.warnings" :key="warning">{{ warning }}</p>
-          </div>
-
-          <div v-if="!analysis" class="empty-state">
-            <span><Code :size="30" weight="Outline" /></span>
-            <strong>等待解析报文</strong>
-            <p>粘贴 JSON 后，这里会按完成时间展示正在升级的项目。</p>
-          </div>
-          <div v-else-if="analysis.tasks.length === 0" class="empty-state">
-            <span><ShieldCheck :size="30" weight="Outline" /></span>
-            <strong>没有正在升级的项目</strong>
-            <p>报文中未发现包含有效 timer 的升级记录。</p>
-          </div>
-          <div v-else-if="filteredTasks.length === 0" class="empty-state small">
-            <strong>该村庄没有升级任务</strong>
-          </div>
+          <div v-if="world.tasks.length === 0" class="empty-world">当前没有正在升级的项目</div>
           <div v-else class="task-list">
-            <article v-for="task in filteredTasks" :key="task.key" class="task-card" :class="{ assisted: task.helperStatus === 'applied', completed: remainingSeconds(task) <= 0 }">
+            <article v-for="task in world.tasks" :key="task.key" class="task-card" :class="{ assisted: task.helperStatus === 'applied', completed: remainingSeconds(task) <= 0 }">
               <span class="task-icon"><component :is="taskIcon(task)" :size="23" weight="Outline" /></span>
               <div class="task-main">
                 <strong>{{ task.name }}</strong>
-                <small>{{ task.village === 'home' ? '主村' : '夜世界' }} · {{ task.categoryLabel }} · ID {{ task.dataId }}</small>
+                <small>{{ task.categoryLabel }} · ID {{ task.dataId }}</small>
               </div>
               <div class="task-level">
                 <template v-if="task.level !== null"><strong>{{ task.level }}</strong><span>→</span><strong>{{ task.targetLevel }}</strong></template>
@@ -246,8 +233,8 @@ function taskIcon(task: UpgradeTask): Component {
               </div>
             </article>
           </div>
-        </article>
-      </section>
+        </section>
+      </template>
 
       <section id="notes" class="notes-section">
         <CircleInfo :size="20" weight="Outline" />
@@ -259,5 +246,42 @@ function taskIcon(task: UpgradeTask): Component {
       <span>纯前端本地运行，不会将你输入的内容上传或保存到服务器</span>
       <span>非官方玩家工具，与 Supercell 无关联，未获其认可或赞助</span>
     </footer>
+
+    <div v-if="importOpen" class="modal-backdrop" role="presentation" @mousedown.self="importOpen = false">
+      <section class="modal-card import-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
+        <header class="modal-header">
+          <div><h2 id="import-title">导入游戏报文</h2><p>内容只在当前浏览器中解析，不会上传或保存。</p></div>
+          <button class="modal-close" type="button" aria-label="关闭导入窗口" @click="importOpen = false">×</button>
+        </header>
+        <textarea v-model="jsonText" spellcheck="false" aria-label="游戏 JSON 报文" placeholder="在这里粘贴完整的玩家 JSON 报文…" @keydown.ctrl.enter.prevent="runAnalysis" />
+        <p v-if="error" class="error-message" role="alert">{{ error }}</p>
+        <div class="modal-actions">
+          <button class="text-button" type="button" @click="loadExample">载入示例</button>
+          <button class="icon-button" type="button" aria-label="清空输入" title="清空输入" @click="clearInput"><Trash :size="19" weight="Outline" /></button>
+          <button class="primary-button" type="button" @click="runAnalysis"><Play :size="18" weight="Filled" />开始解析</button>
+        </div>
+      </section>
+    </div>
+
+    <div v-if="helpersOpen" class="modal-backdrop" role="presentation" @mousedown.self="helpersOpen = false">
+      <section class="modal-card helper-modal" role="dialog" aria-modal="true" aria-labelledby="helper-title">
+        <header class="modal-header">
+          <div><h2 id="helper-title">升级助手使用情况</h2><p>报文中标记为持续使用助手的升级项目</p></div>
+          <button class="modal-close" type="button" aria-label="关闭助手详情" @click="helpersOpen = false">×</button>
+        </header>
+        <div class="helper-list">
+          <article v-for="kind in helperKinds" :key="kind" class="helper-detail">
+            <div class="helper-name"><span><Sparkles :size="20" weight="Outline" /></span><strong>{{ helperTitle(kind) }}</strong></div>
+            <div v-if="assignedTasks(kind).length" class="helper-assignments">
+              <div v-for="task in assignedTasks(kind)" :key="task.key" class="helper-assignment">
+                <div><strong>{{ task.name }}</strong><small>{{ task.categoryLabel }} · {{ task.level }} → {{ task.targetLevel }}</small></div>
+                <span>{{ helperMessage(task) }}</span>
+              </div>
+            </div>
+            <p v-else>当前未绑定升级项目</p>
+          </article>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
