@@ -174,12 +174,11 @@ textarea::placeholder { color: #9aa9a1; }
 .helper-assignment small { margin-top: 3px; color: var(--muted); font-size: 10px; }
 .helper-assignment > span { max-width: 55%; color: var(--green); font-size: 10px; font-weight: 700; text-align: right; }
 
-.overview-section { margin-bottom: 16px; }
-.overview-heading, .overview-grid { display: grid; grid-template-columns: 1.45fr repeat(4, minmax(0, 1fr)); gap: 14px; }
-.overview-heading { margin: 0 4px 8px; }
-.overview-heading h2 { margin: 0; font-size: 16px; }
-.overview-heading h2:last-child { grid-column: 2 / -1; }
-.overview-grid { align-items: stretch; }
+.status-groups { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1.48fr); gap: 16px; margin-bottom: 16px; }
+.status-group > h2 { margin: 0 4px 8px; font-size: 16px; }
+.worker-overview-grid, .queue-overview-grid { display: grid; gap: 14px; align-items: stretch; }
+.worker-overview-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+.queue-overview-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .overview-card, .dashboard-panel {
   min-width: 0;
   border: 1px solid var(--border);
@@ -249,8 +248,7 @@ textarea::placeholder { color: #9aa9a1; }
 @media (max-width: 1080px) {
   .site-header { grid-template-columns: 1fr auto; }
   .main-nav { display: none; }
-  .overview-heading, .overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .overview-heading h2:last-child { grid-column: 2; }
+  .status-groups { grid-template-columns: 1fr; }
   .dashboard-grid { grid-template-columns: 1fr; }
 }
 
@@ -276,8 +274,7 @@ textarea::placeholder { color: #9aa9a1; }
   .text-button { margin: 0; padding: 0 11px; }
   .helper-assignment { align-items: flex-start; flex-direction: column; gap: 7px; }
   .helper-assignment > span { max-width: none; text-align: left; }
-  .overview-heading, .overview-grid { grid-template-columns: 1fr; }
-  .overview-heading h2:last-child { grid-column: auto; margin-top: 5px; }
+  .worker-overview-grid, .queue-overview-grid { grid-template-columns: 1fr; }
   .overview-card { min-height: 154px; }
   .worker-task-grid, .builder-task-grid { grid-template-columns: 1fr; }
 }

@@ -15,6 +15,7 @@ describe('App', () => {
     expect(wrapper.get('#main-world').text()).toContain('6')
     expect(wrapper.get('#builder-world').text()).toContain('夜世界 · 建筑工人任务')
     expect(wrapper.get('.worker-overview').text()).toContain('主世界 6 位工人')
+    expect(wrapper.findAll('.status-group')).toHaveLength(2)
     expect(wrapper.text()).toContain('Wizard')
     expect(wrapper.text()).toContain('12级实验室助手 · 预计节省2天')
     expect(wrapper.findAll('.entity-glyph')).toHaveLength(10)

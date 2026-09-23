@@ -193,9 +193,10 @@ function assignedTasks(kind: HelperKind) {
       </section>
 
       <template v-else>
-        <section class="overview-section" aria-label="工人与独立升级队列概览">
-          <div class="overview-heading"><h2>建筑工人</h2><h2>独立升级队列</h2></div>
-          <div class="overview-grid">
+        <section class="status-groups" aria-label="工人与独立升级队列概览">
+          <section class="status-group" aria-labelledby="worker-group-title">
+            <h2 id="worker-group-title">建筑工人</h2>
+            <div class="worker-overview-grid">
             <article class="overview-card worker-overview">
               <div class="overview-title"><span><Building :size="23" weight="Outline" /></span><strong>主世界 {{ analysis.workerPools.home.total ?? '—' }} 位工人</strong></div>
               <div class="worker-numbers"><b>{{ analysis.workerPools.home.idle ?? '—' }} <small>空闲</small></b><i></i><b>{{ analysis.workerPools.home.busy }} <small>忙碌</small></b></div>
@@ -203,6 +204,18 @@ function assignedTasks(kind: HelperKind) {
               <small class="pool-source">{{ workerSource(analysis.workerPools.home) }}</small>
             </article>
 
+            <article class="overview-card worker-overview builder-worker-overview">
+              <div class="overview-title"><span><Castle :size="23" weight="Outline" /></span><strong>夜世界工人</strong></div>
+              <div class="worker-numbers"><b>{{ analysis.workerPools.builder.idle ?? '—' }} <small>空闲</small></b><i></i><b>{{ analysis.workerPools.builder.busy }} <small>忙碌</small></b></div>
+              <div class="worker-slots" aria-label="夜世界工人占用状态"><span v-for="(busy, index) in workerSlots(analysis.workerPools.builder)" :key="index" :class="{ busy }">工</span></div>
+              <small class="pool-source">{{ workerSource(analysis.workerPools.builder) }}</small>
+            </article>
+            </div>
+          </section>
+
+          <section class="status-group" aria-labelledby="queue-group-title">
+            <h2 id="queue-group-title">独立升级队列</h2>
+            <div class="queue-overview-grid">
             <article class="overview-card queue-overview">
               <div class="overview-title"><span><Flask :size="23" weight="Outline" /></span><strong>实验室</strong></div>
               <template v-if="laboratoryTasks[0]">
@@ -224,13 +237,6 @@ function assignedTasks(kind: HelperKind) {
               <p v-else class="queue-idle">当前空闲</p>
             </article>
 
-            <article class="overview-card worker-overview builder-worker-overview">
-              <div class="overview-title"><span><Castle :size="23" weight="Outline" /></span><strong>夜世界工人</strong></div>
-              <div class="worker-numbers"><b>{{ analysis.workerPools.builder.idle ?? '—' }} <small>空闲</small></b><i></i><b>{{ analysis.workerPools.builder.busy }} <small>忙碌</small></b></div>
-              <div class="worker-slots" aria-label="夜世界工人占用状态"><span v-for="(busy, index) in workerSlots(analysis.workerPools.builder)" :key="index" :class="{ busy }">工</span></div>
-              <small class="pool-source">{{ workerSource(analysis.workerPools.builder) }}</small>
-            </article>
-
             <article class="overview-card queue-overview">
               <div class="overview-title"><span><Flask :size="23" weight="Outline" /></span><strong>星空实验室</strong></div>
               <template v-if="starLaboratoryTasks[0]">
@@ -240,7 +246,8 @@ function assignedTasks(kind: HelperKind) {
               </template>
               <p v-else class="queue-idle">当前空闲</p>
             </article>
-          </div>
+            </div>
+          </section>
         </section>
 
         <div class="dashboard-grid">
