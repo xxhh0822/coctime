@@ -30,6 +30,8 @@ describe('parseSnapshot', () => {
     const result = parseSnapshot(JSON.stringify(snapshot))
 
     expect(result.tag).toBe('#TEST')
+    expect(result.helpers.builder).toMatchObject({ level: 4, cooldownSeconds: 5919 })
+    expect(result.helpers.lab).toMatchObject({ level: 12, cooldownSeconds: 5919 })
     expect(result.tasks).toHaveLength(11)
     expect(result.tasks.map((task) => task.name)).toEqual(expect.arrayContaining([
       'Bomb',

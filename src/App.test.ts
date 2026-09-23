@@ -49,6 +49,8 @@ describe('App', () => {
     expect(dialog.text()).toContain('Bomb')
     expect(dialog.text()).toContain('实验室助手')
     expect(dialog.text()).toContain('Wizard')
+    expect(dialog.text()).toContain('冷却时间')
+    expect(dialog.findAll('.helper-cooldown')).toHaveLength(2)
     expect(dialog.findAll('.entity-glyph')).toHaveLength(2)
   })
 })

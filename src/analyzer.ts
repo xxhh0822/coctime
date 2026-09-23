@@ -250,6 +250,7 @@ export function parseSnapshot(jsonText: string): AnalysisResult {
   return {
     tag: typeof payload.tag === 'string' && payload.tag.trim() ? payload.tag : '未提供玩家标签',
     snapshotAtMs,
+    helpers,
     tasks,
     workerPools: {
       home: {

@@ -61,8 +61,8 @@ body::after { right: -170px; bottom: -190px; background: rgba(217, 167, 46, 0.08
 .brand strong { font-size: 19px; letter-spacing: 0.04em; }
 .brand small { margin-top: 1px; color: var(--muted); font-size: 10px; letter-spacing: 0.08em; }
 .header-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
-.local-badge { display: inline-flex; align-items: center; gap: 6px; padding: 8px 11px; border-radius: 999px; color: var(--green); background: var(--green-soft); font-size: 12px; font-weight: 700; }
 .github-link { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 11px; background: var(--card); transition: transform .2s ease, border-color .2s ease; }
+.github-link svg { width: 20px; height: 20px; fill: currentColor; }
 .github-link:hover { transform: translateY(-1px); border-color: var(--green); }
 
 .main-content { width: min(1240px, calc(100% - 40px)); margin: 0 auto; padding: 24px 0 26px; flex: 1; }
@@ -144,6 +144,7 @@ textarea::placeholder { color: #9aa9a1; }
 .helper-name { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .helper-name > span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; color: var(--green); background: var(--green-soft); }
 .helper-name strong { font-size: 14px; }
+.helper-cooldown { display: block; margin-top: 3px; color: var(--green); font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .helper-detail > p { margin: 0; padding: 10px 0 2px; color: var(--muted); font-size: 11px; }
 .helper-assignments { display: grid; gap: 8px; }
 .helper-assignment { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 11px 12px; border-radius: 10px; background: var(--card); }
@@ -230,7 +231,7 @@ textarea::placeholder { color: #9aa9a1; }
   .site-header { min-height: 62px; padding: 9px 16px; }
   .brand-mark { width: 36px; height: 36px; }
   .brand strong { font-size: 17px; }
-  .brand small, .local-badge { display: none; }
+  .brand small { display: none; }
   .header-actions { gap: 6px; }
   .header-actions .helper-button, .header-actions .import-button { width: 38px; min-height: 38px; padding: 0; gap: 0; font-size: 0; }
   .header-actions .helper-button b { display: none; }

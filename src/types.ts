@@ -63,6 +63,7 @@ export interface WorkerPool {
 export interface AnalysisResult {
   tag: string
   snapshotAtMs: number
+  helpers: Partial<Record<HelperKind, HelperState>>
   tasks: UpgradeTask[]
   workerPools: {
     home: WorkerPool
