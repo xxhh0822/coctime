@@ -150,7 +150,7 @@ body::after { right: -170px; bottom: -190px; background: rgba(217, 167, 46, 0.08
 .task-card:hover { transform: translateY(-1px); border-color: #c7d8cc; box-shadow: 0 8px 18px rgba(42, 73, 61, .06); }
 .task-card.assisted { border-color: #bcdcca; background: linear-gradient(100deg, var(--green-soft), #fbfcf9 46%); }
 .task-card.completed { opacity: .66; }
-.task-icon { display: grid; place-items: center; grid-row: 1 / 3; width: 42px; height: 42px; border-radius: 12px; color: var(--green); background: var(--green-soft); }
+.task-card > .entity-glyph { grid-row: 1 / 3; }
 .task-main, .task-level, .task-time { min-width: 0; }
 .task-main strong, .task-main small, .task-time strong, .task-time small { display: block; }
 .task-main strong { overflow: hidden; color: var(--text); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
@@ -207,6 +207,8 @@ textarea::placeholder { color: #9aa9a1; }
 .helper-detail > p { margin: 0; padding: 10px 0 2px; color: var(--muted); font-size: 11px; }
 .helper-assignments { display: grid; gap: 8px; }
 .helper-assignment { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 11px 12px; border-radius: 10px; background: var(--card); }
+.helper-task-content { display: flex; align-items: center; min-width: 0; gap: 10px; }
+.helper-task-content > div { min-width: 0; }
 .helper-assignment strong, .helper-assignment small { display: block; }
 .helper-assignment strong { font-size: 13px; }
 .helper-assignment small { margin-top: 3px; color: var(--muted); font-size: 10px; }

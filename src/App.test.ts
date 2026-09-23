@@ -15,6 +15,7 @@ describe('App', () => {
     expect(wrapper.get('#builder-world').text()).toContain('3 项升级')
     expect(wrapper.text()).toContain('Wizard')
     expect(wrapper.text()).toContain('预计节省2天')
+    expect(wrapper.findAll('.entity-glyph')).toHaveLength(11)
   })
 
   it('shows a validation error without uploading or discarding the input', async () => {
@@ -41,5 +42,6 @@ describe('App', () => {
     expect(dialog.text()).toContain('Bomb')
     expect(dialog.text()).toContain('实验室助手')
     expect(dialog.text()).toContain('Wizard')
+    expect(dialog.findAll('.entity-glyph')).toHaveLength(2)
   })
 })

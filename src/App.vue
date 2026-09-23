@@ -1,25 +1,20 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import type { Component } from 'vue'
 import {
-  Bomb,
-  Building,
   Castle,
   CircleInfo,
   Clock,
   Code,
   FileText,
-  Flask,
   House,
   List,
-  MagicWand,
-  Paw,
   Play,
   ShieldCheck,
   Sparkles,
   Trash,
 } from 'reicon-vue'
 import { formatDateTime, formatDuration, parseSnapshot } from './analyzer'
+import EntityGlyph from './components/EntityGlyph.vue'
 import type { AnalysisResult, HelperKind, UpgradeTask } from './types'
 
 const jsonText = ref('')
@@ -135,15 +130,6 @@ function assignedTasks(kind: HelperKind) {
   return helperTasks.value.filter((task) => task.helperKind === kind)
 }
 
-function taskIcon(task: UpgradeTask): Component {
-  if (task.category.includes('traps')) return Bomb
-  if (task.category.includes('units') || task.category === 'siege_machines') return Flask
-  if (task.category === 'spells') return MagicWand
-  if (task.category === 'pets') return Paw
-  if (task.category.includes('heroes')) return Sparkles
-  if (task.village === 'builder') return Castle
-  return Building
-}
 </script>
 
 <template>
@@ -217,7 +203,7 @@ function taskIcon(task: UpgradeTask): Component {
           <div v-if="world.tasks.length === 0" class="empty-world">当前没有正在升级的项目</div>
           <div v-else class="task-list">
             <article v-for="task in world.tasks" :key="task.key" class="task-card" :class="{ assisted: task.helperStatus === 'applied', completed: remainingSeconds(task) <= 0 }">
-              <span class="task-icon"><component :is="taskIcon(task)" :size="23" weight="Outline" /></span>
+              <EntityGlyph :task="task" />
               <div class="task-main">
                 <strong>{{ task.name }}</strong>
                 <small>{{ task.categoryLabel }} · ID {{ task.dataId }}</small>
@@ -274,7 +260,10 @@ function taskIcon(task: UpgradeTask): Component {
             <div class="helper-name"><span><Sparkles :size="20" weight="Outline" /></span><strong>{{ helperTitle(kind) }}</strong></div>
             <div v-if="assignedTasks(kind).length" class="helper-assignments">
               <div v-for="task in assignedTasks(kind)" :key="task.key" class="helper-assignment">
-                <div><strong>{{ task.name }}</strong><small>{{ task.categoryLabel }} · {{ task.level }} → {{ task.targetLevel }}</small></div>
+                <div class="helper-task-content">
+                  <EntityGlyph :task="task" size="small" />
+                  <div><strong>{{ task.name }}</strong><small>{{ task.categoryLabel }} · {{ task.level }} → {{ task.targetLevel }}</small></div>
+                </div>
                 <span>{{ helperMessage(task) }}</span>
               </div>
             </div>
