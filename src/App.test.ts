@@ -10,7 +10,7 @@ describe('App', () => {
 
     await exampleButton?.trigger('click')
 
-    expect(wrapper.text()).toContain('#DEMO')
+    expect(wrapper.text()).not.toContain('#DEMO')
     expect(wrapper.get('#main-world').text()).toContain('主世界 · 建筑工人任务')
     expect(wrapper.get('#main-world').text()).toContain('6')
     expect(wrapper.get('#builder-world').text()).toContain('夜世界 · 建筑工人任务')

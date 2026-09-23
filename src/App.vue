@@ -8,15 +8,13 @@ import {
   Code,
   FileText,
   Flask,
-  House,
-  List,
   Paw,
   Play,
   ShieldCheck,
   Sparkles,
   Trash,
 } from 'reicon-vue'
-import { formatDateTime, formatDuration, parseSnapshot } from './analyzer'
+import { formatDuration, parseSnapshot } from './analyzer'
 import EntityGlyph from './components/EntityGlyph.vue'
 import type { AnalysisResult, HelperKind, UpgradeTask, WorkerPool } from './types'
 
@@ -146,12 +144,13 @@ function assignedTasks(kind: HelperKind) {
         <span class="brand-mark"><Clock :size="25" weight="Outline" /></span>
         <span><strong>COCTIME</strong><small>升级时间解析</small></span>
       </a>
-      <nav class="main-nav" aria-label="页面导航">
-        <a href="#top"><House :size="17" weight="Outline" />首页</a>
-        <a href="#main-world"><List :size="17" weight="Outline" />升级追踪</a>
-        <a href="#notes"><CircleInfo :size="17" weight="Outline" />使用说明</a>
-      </nav>
       <div class="header-actions">
+        <button v-if="analysis" class="helper-button" type="button" @click="helpersOpen = true">
+          <Sparkles :size="18" weight="Outline" />升级助手 <b>{{ helperTasks.length }}</b>
+        </button>
+        <button class="import-button" type="button" @click="openImport">
+          <FileText :size="18" weight="Outline" />{{ analysis ? '重新导入' : '导入报文' }}
+        </button>
         <span class="local-badge"><ShieldCheck :size="18" weight="Outline" />纯本地运行</span>
         <a class="github-link" href="https://github.com/xxhh0822/coctime" target="_blank" rel="noopener noreferrer" aria-label="打开 GitHub 仓库" title="GitHub 仓库">
           <Code :size="19" weight="Outline" />
@@ -160,27 +159,6 @@ function assignedTasks(kind: HelperKind) {
     </header>
 
     <main id="top" class="main-content">
-      <section id="analyzer" class="content-toolbar" aria-label="报文和助手操作">
-        <div class="player-meta">
-          <template v-if="analysis">
-            <strong>{{ analysis.tag }}</strong>
-            <span>报文时间 {{ formatDateTime(analysis.snapshotAtMs) }}</span>
-          </template>
-          <template v-else>
-            <strong>升级进度</strong>
-            <span>导入游戏报文后查看正在升级的项目</span>
-          </template>
-        </div>
-        <div class="toolbar-actions">
-          <button v-if="analysis" class="helper-button" type="button" @click="helpersOpen = true">
-            <Sparkles :size="18" weight="Outline" />升级助手 <b>{{ helperTasks.length }}</b>
-          </button>
-          <button class="import-button" type="button" @click="openImport">
-            <FileText :size="18" weight="Outline" />{{ analysis ? '重新导入' : '导入报文' }}
-          </button>
-        </div>
-      </section>
-
       <div v-if="analysis?.warnings.length" class="warning-list">
         <p v-for="warning in analysis.warnings" :key="warning">{{ warning }}</p>
       </div>
