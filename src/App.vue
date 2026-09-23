@@ -209,6 +209,7 @@ function assignedTasks(kind: HelperKind) {
                 <div class="queue-current"><EntityGlyph :task="laboratoryTasks[0]" /><div><strong>{{ laboratoryTasks[0].name }}</strong><b>{{ laboratoryTasks[0].level }} → {{ laboratoryTasks[0].targetLevel }}</b></div></div>
                 <div class="progress-track"><span :style="{ width: `${progressPercent(laboratoryTasks[0])}%` }"></span></div>
                 <small>剩余 {{ formatDuration(remainingSeconds(laboratoryTasks[0])) }}</small>
+                <em v-if="laboratoryTasks[0].helperStatus === 'applied'" class="queue-helper"><Sparkles :size="12" weight="Outline" />{{ helperMessage(laboratoryTasks[0]) }}</em>
               </template>
               <p v-else class="queue-idle">当前空闲</p>
             </article>
@@ -259,7 +260,7 @@ function assignedTasks(kind: HelperKind) {
 
             <div class="queue-list-title"><Sparkles :size="20" weight="Outline" /><h3>独立队列</h3></div>
             <div class="independent-list">
-              <article v-for="task in [...laboratoryTasks, ...petTasks]" :key="task.key" class="independent-row"><EntityGlyph :task="task" size="small" /><b>{{ task.category === 'pets' ? '宠物屋' : '实验室' }}</b><strong>{{ task.name }}　{{ task.level }} → {{ task.targetLevel }}</strong><div class="progress-track"><span :style="{ width: `${progressPercent(task)}%` }"></span></div><small>剩余 {{ formatDuration(remainingSeconds(task)) }}</small></article>
+              <article v-for="task in [...laboratoryTasks, ...petTasks]" :key="task.key" class="independent-row"><EntityGlyph :task="task" size="small" /><b>{{ task.category === 'pets' ? '宠物屋' : '实验室' }}</b><strong>{{ task.name }}　{{ task.level }} → {{ task.targetLevel }}</strong><div class="progress-track"><span :style="{ width: `${progressPercent(task)}%` }"></span></div><small>剩余 {{ formatDuration(remainingSeconds(task)) }}</small><em v-if="task.helperStatus === 'applied'"><Sparkles :size="12" weight="Outline" />{{ helperMessage(task) }}</em></article>
               <p v-if="!laboratoryTasks.length && !petTasks.length" class="queue-idle">实验室与宠物屋当前空闲</p>
             </div>
           </section>

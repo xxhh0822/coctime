@@ -17,6 +17,7 @@ describe('App', () => {
     expect(wrapper.get('.worker-overview').text()).toContain('主世界 6 位工人')
     expect(wrapper.text()).toContain('Wizard')
     expect(wrapper.text()).toContain('独立队列')
+    expect(wrapper.text()).toContain('12级实验室助手 · 预计节省2天')
     expect(wrapper.findAll('.entity-glyph')).toHaveLength(12)
   })
 
