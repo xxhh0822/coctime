@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
+  Building,
   Castle,
   CircleInfo,
   Clock,
   Code,
   FileText,
+  Flask,
   House,
   List,
+  Paw,
   Play,
   ShieldCheck,
   Sparkles,
@@ -15,7 +18,7 @@ import {
 } from 'reicon-vue'
 import { formatDateTime, formatDuration, parseSnapshot } from './analyzer'
 import EntityGlyph from './components/EntityGlyph.vue'
-import type { AnalysisResult, HelperKind, UpgradeTask } from './types'
+import type { AnalysisResult, HelperKind, UpgradeTask, WorkerPool } from './types'
 
 const jsonText = ref('')
 const analysis = ref<AnalysisResult | null>(null)
@@ -25,14 +28,13 @@ const helpersOpen = ref(false)
 const nowMs = ref(Date.now())
 let timer: ReturnType<typeof setInterval> | undefined
 
-const homeTasks = computed(() => analysis.value?.tasks.filter((task) => task.village === 'home') ?? [])
-const builderTasks = computed(() => analysis.value?.tasks.filter((task) => task.village === 'builder') ?? [])
 const helperTasks = computed(() => analysis.value?.tasks.filter((task) => task.recurrent) ?? [])
 const helperKinds: HelperKind[] = ['builder', 'lab']
-const worlds = computed(() => [
-  { key: 'home', title: '主世界', description: '建筑、英雄、兵种、法术、攻城机器与宠物', icon: House, tasks: homeTasks.value },
-  { key: 'builder', title: '夜世界', description: '建筑大师基地升级项目', icon: Castle, tasks: builderTasks.value },
-])
+const homeBuilderTasks = computed(() => analysis.value?.tasks.filter((task) => ['buildings', 'traps', 'heroes'].includes(task.category)) ?? [])
+const builderBaseTasks = computed(() => analysis.value?.tasks.filter((task) => ['buildings2', 'traps2', 'heroes2'].includes(task.category)) ?? [])
+const laboratoryTasks = computed(() => analysis.value?.tasks.filter((task) => ['units', 'spells', 'siege_machines'].includes(task.category)) ?? [])
+const petTasks = computed(() => analysis.value?.tasks.filter((task) => task.category === 'pets') ?? [])
+const starLaboratoryTasks = computed(() => analysis.value?.tasks.filter((task) => task.category === 'units2') ?? [])
 
 onMounted(() => {
   timer = setInterval(() => {
@@ -70,6 +72,7 @@ function loadExample() {
       { data: 124000000, lvl: 4, helper_cooldown: 5919 },
       { data: 124000001, lvl: 12, helper_cooldown: 5919 },
     ],
+    buildings: [{ data: 1000015, lvl: 8, cnt: 5 }, { data: 1000064, lvl: 1, cnt: 1 }],
     traps: [
       { data: 12000000, lvl: 13, timer: 499350 },
       { data: 12000000, lvl: 13, timer: 4984, helper_recurrent: true },
@@ -83,7 +86,6 @@ function loadExample() {
     buildings2: [
       { data: 1000041, lvl: 9, timer: 63164 },
       { data: 1000043, lvl: 9, timer: 165956 },
-      { data: 1000041, lvl: 9, timer: 416594 },
     ],
   }, null, 2)
   runAnalysis()
@@ -99,15 +101,20 @@ function remainingSeconds(task: UpgradeTask) {
   return Math.max(0, (task.adjustedFinishAtMs - nowMs.value) / 1000)
 }
 
-function finishLabel(task: UpgradeTask) {
-  if (remainingSeconds(task) <= 0) return '按报文推算已完成'
-  return `预计 ${new Intl.DateTimeFormat('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(new Date(task.adjustedFinishAtMs))} 完成`
+function progressPercent(task: UpgradeTask) {
+  const totalSeconds = Math.max(1, (task.adjustedFinishAtMs - task.baselineFinishAtMs) / 1000 + task.timerSeconds)
+  return Math.round(Math.min(100, Math.max(0, (1 - remainingSeconds(task) / totalSeconds) * 100)))
+}
+
+function workerSlots(pool: WorkerPool | undefined) {
+  if (!pool?.total) return []
+  return Array.from({ length: pool.total }, (_, index) => index < pool.busy)
+}
+
+function workerSource(pool: WorkerPool | undefined) {
+  if (pool?.source === 'hut-count') return '按 Builder’s Hut 与 B.O.B’s Hut 数量计算'
+  if (pool?.source === 'builder-base-inference') return '按基础 2 位工人及第六位主世界工人解锁推算'
+  return '报文未提供足够的工人数量信息'
 }
 
 function helperMessage(task: UpgradeTask) {
@@ -185,42 +192,95 @@ function assignedTasks(kind: HelperKind) {
         <button class="primary-button" type="button" @click="openImport"><FileText :size="18" weight="Outline" />导入报文</button>
       </section>
 
-      <div v-else class="worlds-grid">
-        <section
-          v-for="world in worlds"
-          :id="world.key === 'home' ? 'main-world' : 'builder-world'"
-          :key="world.key"
-          class="world-section"
-        >
-          <header class="world-header">
-            <div class="world-title">
-              <span><component :is="world.icon" :size="22" weight="Outline" /></span>
-              <div><h2>{{ world.title }}</h2><p>{{ world.description }}</p></div>
-            </div>
-            <strong class="world-count">{{ world.tasks.length }} 项升级</strong>
-          </header>
+      <template v-else>
+        <section class="overview-section" aria-label="工人与独立升级队列概览">
+          <div class="overview-heading"><h2>建筑工人</h2><h2>独立升级队列</h2></div>
+          <div class="overview-grid">
+            <article class="overview-card worker-overview">
+              <div class="overview-title"><span><Building :size="23" weight="Outline" /></span><strong>主世界 {{ analysis.workerPools.home.total ?? '—' }} 位工人</strong></div>
+              <div class="worker-numbers"><b>{{ analysis.workerPools.home.idle ?? '—' }} <small>空闲</small></b><i></i><b>{{ analysis.workerPools.home.busy }} <small>忙碌</small></b></div>
+              <div class="worker-slots" aria-label="主世界工人占用状态"><span v-for="(busy, index) in workerSlots(analysis.workerPools.home)" :key="index" :class="{ busy }">工</span></div>
+              <small class="pool-source">{{ workerSource(analysis.workerPools.home) }}</small>
+            </article>
 
-          <div v-if="world.tasks.length === 0" class="empty-world">当前没有正在升级的项目</div>
-          <div v-else class="task-list">
-            <article v-for="task in world.tasks" :key="task.key" class="task-card" :class="{ assisted: task.helperStatus === 'applied', completed: remainingSeconds(task) <= 0 }">
-              <EntityGlyph :task="task" />
-              <div class="task-main">
-                <strong>{{ task.name }}</strong>
-                <small>{{ task.categoryLabel }} · ID {{ task.dataId }}</small>
-              </div>
-              <div class="task-level">
-                <template v-if="task.level !== null"><strong>{{ task.level }}</strong><span>→</span><strong>{{ task.targetLevel }}</strong></template>
-                <span v-else>等级未知</span>
-                <em :class="task.helperStatus"><Sparkles v-if="task.helperStatus === 'applied'" :size="14" weight="Outline" />{{ helperMessage(task) }}</em>
-              </div>
-              <div class="task-time">
-                <strong>{{ formatDuration(remainingSeconds(task)) }}</strong>
-                <small>{{ finishLabel(task) }}</small>
-              </div>
+            <article class="overview-card queue-overview">
+              <div class="overview-title"><span><Flask :size="23" weight="Outline" /></span><strong>实验室</strong></div>
+              <template v-if="laboratoryTasks[0]">
+                <div class="queue-current"><EntityGlyph :task="laboratoryTasks[0]" /><div><strong>{{ laboratoryTasks[0].name }}</strong><b>{{ laboratoryTasks[0].level }} → {{ laboratoryTasks[0].targetLevel }}</b></div></div>
+                <div class="progress-track"><span :style="{ width: `${progressPercent(laboratoryTasks[0])}%` }"></span></div>
+                <small>剩余 {{ formatDuration(remainingSeconds(laboratoryTasks[0])) }}</small>
+              </template>
+              <p v-else class="queue-idle">当前空闲</p>
+            </article>
+
+            <article class="overview-card queue-overview">
+              <div class="overview-title"><span><Paw :size="23" weight="Outline" /></span><strong>宠物屋</strong></div>
+              <template v-if="petTasks[0]">
+                <div class="queue-current"><EntityGlyph :task="petTasks[0]" /><div><strong>{{ petTasks[0].name }}</strong><b>{{ petTasks[0].level }} → {{ petTasks[0].targetLevel }}</b></div></div>
+                <div class="progress-track"><span :style="{ width: `${progressPercent(petTasks[0])}%` }"></span></div>
+                <small>剩余 {{ formatDuration(remainingSeconds(petTasks[0])) }}</small>
+              </template>
+              <p v-else class="queue-idle">当前空闲</p>
+            </article>
+
+            <article class="overview-card worker-overview builder-worker-overview">
+              <div class="overview-title"><span><Castle :size="23" weight="Outline" /></span><strong>夜世界工人</strong></div>
+              <div class="worker-numbers"><b>{{ analysis.workerPools.builder.idle ?? '—' }} <small>空闲</small></b><i></i><b>{{ analysis.workerPools.builder.busy }} <small>忙碌</small></b></div>
+              <div class="worker-slots" aria-label="夜世界工人占用状态"><span v-for="(busy, index) in workerSlots(analysis.workerPools.builder)" :key="index" :class="{ busy }">工</span></div>
+              <small class="pool-source">{{ workerSource(analysis.workerPools.builder) }}</small>
+            </article>
+
+            <article class="overview-card queue-overview">
+              <div class="overview-title"><span><Flask :size="23" weight="Outline" /></span><strong>星空实验室</strong></div>
+              <template v-if="starLaboratoryTasks[0]">
+                <div class="queue-current"><EntityGlyph :task="starLaboratoryTasks[0]" /><div><strong>{{ starLaboratoryTasks[0].name }}</strong><b>{{ starLaboratoryTasks[0].level }} → {{ starLaboratoryTasks[0].targetLevel }}</b></div></div>
+                <div class="progress-track"><span :style="{ width: `${progressPercent(starLaboratoryTasks[0])}%` }"></span></div>
+                <small>剩余 {{ formatDuration(remainingSeconds(starLaboratoryTasks[0])) }}</small>
+              </template>
+              <p v-else class="queue-idle">当前空闲</p>
             </article>
           </div>
         </section>
-      </div>
+
+        <div class="dashboard-grid">
+          <section id="main-world" class="dashboard-panel">
+            <header class="panel-header"><div><span><Building :size="21" weight="Outline" /></span><h2>主世界 · 建筑工人任务</h2><b>{{ homeBuilderTasks.length }}</b></div><small>按预计完成时间排序</small></header>
+            <div v-if="homeBuilderTasks.length" class="worker-task-grid">
+              <article v-for="(task, index) in homeBuilderTasks" :key="task.key" class="worker-task" :class="{ assisted: task.helperStatus === 'applied', completed: remainingSeconds(task) <= 0 }">
+                <EntityGlyph :task="task" />
+                <div class="worker-task-main"><strong>{{ task.name }}</strong><small>{{ task.categoryLabel }} · ID {{ task.dataId }}</small><b>{{ task.level }} → {{ task.targetLevel }}</b></div>
+                <span class="worker-tag">工人 #{{ index + 1 }}</span>
+                <div class="task-progress"><span :style="{ width: `${progressPercent(task)}%` }"></span></div>
+                <small class="task-remaining">剩余 {{ formatDuration(remainingSeconds(task)) }}</small>
+                <em v-if="task.helperStatus === 'applied'"><Sparkles :size="13" weight="Outline" />{{ helperMessage(task) }}</em>
+              </article>
+            </div>
+            <div v-else class="empty-world">当前没有建筑工人任务</div>
+
+            <div class="queue-list-title"><Sparkles :size="20" weight="Outline" /><h3>独立队列</h3></div>
+            <div class="independent-list">
+              <article v-for="task in [...laboratoryTasks, ...petTasks]" :key="task.key" class="independent-row"><EntityGlyph :task="task" size="small" /><b>{{ task.category === 'pets' ? '宠物屋' : '实验室' }}</b><strong>{{ task.name }}　{{ task.level }} → {{ task.targetLevel }}</strong><div class="progress-track"><span :style="{ width: `${progressPercent(task)}%` }"></span></div><small>剩余 {{ formatDuration(remainingSeconds(task)) }}</small></article>
+              <p v-if="!laboratoryTasks.length && !petTasks.length" class="queue-idle">实验室与宠物屋当前空闲</p>
+            </div>
+          </section>
+
+          <aside class="builder-dashboard">
+            <section id="builder-world" class="dashboard-panel builder-panel">
+              <header class="panel-header"><div><span><Castle :size="21" weight="Outline" /></span><h2>夜世界 · 建筑工人任务</h2><b>{{ builderBaseTasks.length }}</b></div><small>按预计完成时间排序</small></header>
+              <div v-if="builderBaseTasks.length" class="builder-task-grid">
+                <article v-for="(task, index) in builderBaseTasks" :key="task.key" class="worker-task"><EntityGlyph :task="task" /><div class="worker-task-main"><strong>{{ task.name }}</strong><small>{{ task.categoryLabel }} · ID {{ task.dataId }}</small><b>{{ task.level }} → {{ task.targetLevel }}</b></div><span class="worker-tag">工人 #{{ index + 1 }}</span><div class="task-progress"><span :style="{ width: `${progressPercent(task)}%` }"></span></div><small class="task-remaining">剩余 {{ formatDuration(remainingSeconds(task)) }}</small></article>
+              </div>
+              <div v-else class="empty-world">当前没有夜世界建筑工人任务</div>
+            </section>
+
+            <section class="dashboard-panel star-lab-panel">
+              <header class="panel-header"><div><span><Flask :size="21" weight="Outline" /></span><h2>星空实验室</h2></div></header>
+              <article v-if="starLaboratoryTasks[0]" class="star-lab-active"><EntityGlyph :task="starLaboratoryTasks[0]" /><strong>{{ starLaboratoryTasks[0].name }}　{{ starLaboratoryTasks[0].level }} → {{ starLaboratoryTasks[0].targetLevel }}</strong><div class="progress-track"><span :style="{ width: `${progressPercent(starLaboratoryTasks[0])}%` }"></span></div><small>剩余 {{ formatDuration(remainingSeconds(starLaboratoryTasks[0])) }}</small></article>
+              <div v-else class="star-lab-empty"><Flask :size="42" weight="Outline" /><strong>当前空闲</strong><p>没有正在升级的夜世界兵种</p></div>
+            </section>
+          </aside>
+        </div>
+      </template>
 
       <section id="notes" class="notes-section">
         <CircleInfo :size="20" weight="Outline" />

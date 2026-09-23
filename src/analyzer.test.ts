@@ -41,6 +41,19 @@ describe('parseSnapshot', () => {
     ]))
   })
 
+  it('separates builder pools from laboratory and pet upgrade queues', () => {
+    const result = parseSnapshot(JSON.stringify({
+      ...snapshot,
+      buildings: [{ data: 1000015, lvl: 8, cnt: 5 }, { data: 1000064, lvl: 1, cnt: 1 }],
+    }))
+
+    expect(result.workerPools.home).toMatchObject({ total: 6, busy: 6, idle: 0, source: 'hut-count' })
+    expect(result.workerPools.builder).toMatchObject({ total: 3, busy: 3, idle: 0, source: 'builder-base-inference' })
+    expect(result.tasks.filter((task) => ['units', 'spells', 'siege_machines'].includes(task.category))).toHaveLength(1)
+    expect(result.tasks.filter((task) => task.category === 'pets')).toHaveLength(1)
+    expect(result.tasks.filter((task) => task.category === 'units2')).toHaveLength(0)
+  })
+
   it('applies the level twelve lab assistant to Wizard', () => {
     const result = parseSnapshot(JSON.stringify(snapshot))
     const wizard = result.tasks.find((task) => task.dataId === 4000006)

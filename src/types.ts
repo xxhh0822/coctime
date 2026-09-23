@@ -53,9 +53,20 @@ export interface UpgradeTask {
   helperStatus: HelperStatus
 }
 
+export interface WorkerPool {
+  total: number | null
+  busy: number
+  idle: number | null
+  source: 'hut-count' | 'builder-base-inference' | 'unavailable'
+}
+
 export interface AnalysisResult {
   tag: string
   snapshotAtMs: number
   tasks: UpgradeTask[]
+  workerPools: {
+    home: WorkerPool
+    builder: WorkerPool
+  }
   warnings: string[]
 }

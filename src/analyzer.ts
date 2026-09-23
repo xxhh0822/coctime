@@ -63,6 +63,12 @@ function getRecords(payload: SnapshotPayload, source: string): RawRecord[] {
   return Array.isArray(value) ? value.filter(isRecord) as RawRecord[] : []
 }
 
+function countPlacedItems(payload: SnapshotPayload, source: string, dataId: number) {
+  return getRecords(payload, source)
+    .filter((record) => record.data === dataId)
+    .reduce((total, record) => total + (typeof record.cnt === 'number' && record.cnt > 0 ? record.cnt : 1), 0)
+}
+
 function findHelpers(payload: SnapshotPayload): Partial<Record<HelperKind, HelperState>> {
   const helpers = getRecords(payload, 'helpers')
   const result: Partial<Record<HelperKind, HelperState>> = {}
@@ -233,10 +239,32 @@ export function parseSnapshot(jsonText: string): AnalysisResult {
 
   tasks.sort((a, b) => a.adjustedFinishAtMs - b.adjustedFinishAtMs)
 
+  const homeBuilderTasks = tasks.filter((task) => task.category === 'buildings' || task.category === 'traps' || task.category === 'heroes')
+  const builderBaseTasks = tasks.filter((task) => task.category === 'buildings2' || task.category === 'traps2' || task.category === 'heroes2')
+  const homeBuilderHuts = countPlacedItems(payload, 'buildings', 1000015)
+  const bobHuts = countPlacedItems(payload, 'buildings', 1000064)
+  const homeBuilderTotal = homeBuilderHuts + bobHuts
+  const hasHomeWorkerData = homeBuilderTotal > 0
+  const builderBaseTotal = hasHomeWorkerData ? (homeBuilderTotal >= 6 ? 3 : 2) : null
+
   return {
     tag: typeof payload.tag === 'string' && payload.tag.trim() ? payload.tag : '未提供玩家标签',
     snapshotAtMs,
     tasks,
+    workerPools: {
+      home: {
+        total: hasHomeWorkerData ? homeBuilderTotal : null,
+        busy: homeBuilderTasks.length,
+        idle: hasHomeWorkerData ? Math.max(0, homeBuilderTotal - homeBuilderTasks.length) : null,
+        source: hasHomeWorkerData ? 'hut-count' : 'unavailable',
+      },
+      builder: {
+        total: builderBaseTotal,
+        busy: builderBaseTasks.length,
+        idle: builderBaseTotal === null ? null : Math.max(0, builderBaseTotal - builderBaseTasks.length),
+        source: builderBaseTotal === null ? 'unavailable' : 'builder-base-inference',
+      },
+    },
     warnings,
   }
 }
