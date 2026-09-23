@@ -16,9 +16,10 @@ describe('App', () => {
     expect(wrapper.get('#builder-world').text()).toContain('夜世界 · 建筑工人任务')
     expect(wrapper.get('.worker-overview').text()).toContain('主世界 6 位工人')
     expect(wrapper.text()).toContain('Wizard')
-    expect(wrapper.text()).toContain('独立队列')
     expect(wrapper.text()).toContain('12级实验室助手 · 预计节省2天')
-    expect(wrapper.findAll('.entity-glyph')).toHaveLength(12)
+    expect(wrapper.findAll('.entity-glyph')).toHaveLength(10)
+    expect(wrapper.findAll('.independent-row')).toHaveLength(0)
+    expect(wrapper.findAll('.star-lab-panel')).toHaveLength(0)
   })
 
   it('shows a validation error without uploading or discarding the input', async () => {

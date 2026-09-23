@@ -257,12 +257,6 @@ function assignedTasks(kind: HelperKind) {
               </article>
             </div>
             <div v-else class="empty-world">当前没有建筑工人任务</div>
-
-            <div class="queue-list-title"><Sparkles :size="20" weight="Outline" /><h3>独立队列</h3></div>
-            <div class="independent-list">
-              <article v-for="task in [...laboratoryTasks, ...petTasks]" :key="task.key" class="independent-row"><EntityGlyph :task="task" size="small" /><b>{{ task.category === 'pets' ? '宠物屋' : '实验室' }}</b><strong>{{ task.name }}　{{ task.level }} → {{ task.targetLevel }}</strong><div class="progress-track"><span :style="{ width: `${progressPercent(task)}%` }"></span></div><small>剩余 {{ formatDuration(remainingSeconds(task)) }}</small><em v-if="task.helperStatus === 'applied'"><Sparkles :size="12" weight="Outline" />{{ helperMessage(task) }}</em></article>
-              <p v-if="!laboratoryTasks.length && !petTasks.length" class="queue-idle">实验室与宠物屋当前空闲</p>
-            </div>
           </section>
 
           <aside class="builder-dashboard">
@@ -272,12 +266,6 @@ function assignedTasks(kind: HelperKind) {
                 <article v-for="(task, index) in builderBaseTasks" :key="task.key" class="worker-task"><EntityGlyph :task="task" /><div class="worker-task-main"><strong>{{ task.name }}</strong><small>{{ task.categoryLabel }} · ID {{ task.dataId }}</small><b>{{ task.level }} → {{ task.targetLevel }}</b></div><span class="worker-tag">工人 #{{ index + 1 }}</span><div class="task-progress"><span :style="{ width: `${progressPercent(task)}%` }"></span></div><small class="task-remaining">剩余 {{ formatDuration(remainingSeconds(task)) }}</small></article>
               </div>
               <div v-else class="empty-world">当前没有夜世界建筑工人任务</div>
-            </section>
-
-            <section class="dashboard-panel star-lab-panel">
-              <header class="panel-header"><div><span><Flask :size="21" weight="Outline" /></span><h2>星空实验室</h2></div></header>
-              <article v-if="starLaboratoryTasks[0]" class="star-lab-active"><EntityGlyph :task="starLaboratoryTasks[0]" /><strong>{{ starLaboratoryTasks[0].name }}　{{ starLaboratoryTasks[0].level }} → {{ starLaboratoryTasks[0].targetLevel }}</strong><div class="progress-track"><span :style="{ width: `${progressPercent(starLaboratoryTasks[0])}%` }"></span></div><small>剩余 {{ formatDuration(remainingSeconds(starLaboratoryTasks[0])) }}</small></article>
-              <div v-else class="star-lab-empty"><Flask :size="42" weight="Outline" /><strong>当前空闲</strong><p>没有正在升级的夜世界兵种</p></div>
             </section>
           </aside>
         </div>
