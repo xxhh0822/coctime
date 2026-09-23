@@ -99,11 +99,6 @@ function remainingSeconds(task: UpgradeTask) {
   return Math.max(0, (task.adjustedFinishAtMs - nowMs.value) / 1000)
 }
 
-function progressPercent(task: UpgradeTask) {
-  const totalSeconds = Math.max(1, (task.adjustedFinishAtMs - task.baselineFinishAtMs) / 1000 + task.timerSeconds)
-  return Math.round(Math.min(100, Math.max(0, (1 - remainingSeconds(task) / totalSeconds) * 100)))
-}
-
 function workerSlots(pool: WorkerPool | undefined) {
   if (!pool?.total) return []
   return Array.from({ length: pool.total }, (_, index) => index < pool.busy)
@@ -198,8 +193,7 @@ function assignedTasks(kind: HelperKind) {
               <div class="overview-title"><span><Flask :size="23" weight="Outline" /></span><strong>实验室</strong></div>
               <template v-if="laboratoryTasks[0]">
                 <div class="queue-current"><EntityGlyph :task="laboratoryTasks[0]" /><div><strong>{{ laboratoryTasks[0].name }}</strong><b>{{ laboratoryTasks[0].level }} → {{ laboratoryTasks[0].targetLevel }}</b></div></div>
-                <div class="progress-track"><span :style="{ width: `${progressPercent(laboratoryTasks[0])}%` }"></span></div>
-                <small>剩余 {{ formatDuration(remainingSeconds(laboratoryTasks[0])) }}</small>
+                <small class="queue-remaining">剩余 {{ formatDuration(remainingSeconds(laboratoryTasks[0])) }}</small>
                 <em v-if="laboratoryTasks[0].helperStatus === 'applied'" class="queue-helper"><Sparkles :size="12" weight="Outline" />{{ helperMessage(laboratoryTasks[0]) }}</em>
               </template>
               <p v-else class="queue-idle">当前空闲</p>
@@ -209,8 +203,7 @@ function assignedTasks(kind: HelperKind) {
               <div class="overview-title"><span><Paw :size="23" weight="Outline" /></span><strong>宠物屋</strong></div>
               <template v-if="petTasks[0]">
                 <div class="queue-current"><EntityGlyph :task="petTasks[0]" /><div><strong>{{ petTasks[0].name }}</strong><b>{{ petTasks[0].level }} → {{ petTasks[0].targetLevel }}</b></div></div>
-                <div class="progress-track"><span :style="{ width: `${progressPercent(petTasks[0])}%` }"></span></div>
-                <small>剩余 {{ formatDuration(remainingSeconds(petTasks[0])) }}</small>
+                <small class="queue-remaining">剩余 {{ formatDuration(remainingSeconds(petTasks[0])) }}</small>
               </template>
               <p v-else class="queue-idle">当前空闲</p>
             </article>
@@ -219,8 +212,7 @@ function assignedTasks(kind: HelperKind) {
               <div class="overview-title"><span><Flask :size="23" weight="Outline" /></span><strong>星空实验室</strong></div>
               <template v-if="starLaboratoryTasks[0]">
                 <div class="queue-current"><EntityGlyph :task="starLaboratoryTasks[0]" /><div><strong>{{ starLaboratoryTasks[0].name }}</strong><b>{{ starLaboratoryTasks[0].level }} → {{ starLaboratoryTasks[0].targetLevel }}</b></div></div>
-                <div class="progress-track"><span :style="{ width: `${progressPercent(starLaboratoryTasks[0])}%` }"></span></div>
-                <small>剩余 {{ formatDuration(remainingSeconds(starLaboratoryTasks[0])) }}</small>
+                <small class="queue-remaining">剩余 {{ formatDuration(remainingSeconds(starLaboratoryTasks[0])) }}</small>
               </template>
               <p v-else class="queue-idle">当前空闲</p>
             </article>
@@ -236,7 +228,6 @@ function assignedTasks(kind: HelperKind) {
                 <EntityGlyph :task="task" />
                 <div class="worker-task-main"><strong>{{ task.name }}</strong><small>{{ task.categoryLabel }} · ID {{ task.dataId }}</small><b>{{ task.level }} → {{ task.targetLevel }}</b></div>
                 <span class="worker-tag">工人 #{{ index + 1 }}</span>
-                <div class="task-progress"><span :style="{ width: `${progressPercent(task)}%` }"></span></div>
                 <small class="task-remaining">剩余 {{ formatDuration(remainingSeconds(task)) }}</small>
                 <em v-if="task.helperStatus === 'applied'"><Sparkles :size="13" weight="Outline" />{{ helperMessage(task) }}</em>
               </article>
@@ -248,7 +239,7 @@ function assignedTasks(kind: HelperKind) {
             <section id="builder-world" class="dashboard-panel builder-panel">
               <header class="panel-header"><div><span><Castle :size="21" weight="Outline" /></span><h2>夜世界 · 建筑工人任务</h2><b>{{ builderBaseTasks.length }}</b></div><small>按预计完成时间排序</small></header>
               <div v-if="builderBaseTasks.length" class="builder-task-grid">
-                <article v-for="(task, index) in builderBaseTasks" :key="task.key" class="worker-task"><EntityGlyph :task="task" /><div class="worker-task-main"><strong>{{ task.name }}</strong><small>{{ task.categoryLabel }} · ID {{ task.dataId }}</small><b>{{ task.level }} → {{ task.targetLevel }}</b></div><span class="worker-tag">工人 #{{ index + 1 }}</span><div class="task-progress"><span :style="{ width: `${progressPercent(task)}%` }"></span></div><small class="task-remaining">剩余 {{ formatDuration(remainingSeconds(task)) }}</small></article>
+                <article v-for="(task, index) in builderBaseTasks" :key="task.key" class="worker-task"><EntityGlyph :task="task" /><div class="worker-task-main"><strong>{{ task.name }}</strong><small>{{ task.categoryLabel }} · ID {{ task.dataId }}</small><b>{{ task.level }} → {{ task.targetLevel }}</b></div><span class="worker-tag">工人 #{{ index + 1 }}</span><small class="task-remaining">剩余 {{ formatDuration(remainingSeconds(task)) }}</small></article>
               </div>
               <div v-else class="empty-world">当前没有夜世界建筑工人任务</div>
             </section>

@@ -184,11 +184,9 @@ textarea::placeholder { color: #9aa9a1; }
 .queue-current strong, .queue-current b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .queue-current strong { font-size: 14px; }
 .queue-current b { margin-top: 4px; font-size: 15px; }
-.queue-overview > small { display: block; margin-top: 9px; color: var(--muted); font-size: 10px; }
+.queue-remaining { display: block; margin-top: 12px; color: var(--text); font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .queue-helper { display: flex; align-items: center; gap: 3px; margin-top: 7px; color: var(--green); font-size: 9px; font-style: normal; font-weight: 800; white-space: nowrap; }
 .queue-idle { margin: auto 0; color: var(--green); font-size: 14px; font-weight: 800; text-align: center; }
-.progress-track, .task-progress { height: 8px; overflow: hidden; border-radius: 999px; background: #e5ebe7; }
-.progress-track > span, .task-progress > span { display: block; height: 100%; min-width: 5px; border-radius: inherit; background: linear-gradient(90deg, #2f8e63, #54bd8b); }
 
 .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.28fr) minmax(400px, .92fr); gap: 16px; }
 .dashboard-panel { padding: 16px; }
@@ -220,9 +218,7 @@ textarea::placeholder { color: #9aa9a1; }
 .worker-task-main small { margin-top: 2px; color: var(--muted); font-size: 9px; }
 .worker-task-main b { margin-top: 3px; font-size: 13px; }
 .worker-tag { position: absolute; top: 12px; right: 11px; padding: 4px 8px; border-radius: 999px; color: var(--green); background: var(--green-soft); font-size: 9px; white-space: nowrap; }
-.task-progress, .task-remaining { grid-column: 2; }
-.task-progress { height: 6px; }
-.task-remaining { color: var(--muted); font-size: 9px; }
+.task-remaining { grid-column: 2; color: var(--text); font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .worker-task em { grid-column: 1 / -1; display: flex; align-items: center; gap: 3px; overflow: hidden; color: var(--green); font-size: 9px; font-style: normal; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (max-width: 1080px) {

@@ -21,6 +21,8 @@ describe('App', () => {
     expect(wrapper.findAll('.entity-glyph')).toHaveLength(10)
     expect(wrapper.findAll('.independent-row')).toHaveLength(0)
     expect(wrapper.findAll('.star-lab-panel')).toHaveLength(0)
+    expect(wrapper.findAll('.progress-track, .task-progress')).toHaveLength(0)
+    expect(wrapper.findAll('.queue-remaining, .task-remaining')).not.toHaveLength(0)
   })
 
   it('shows a validation error without uploading or discarding the input', async () => {
